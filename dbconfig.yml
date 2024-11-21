@@ -1,0 +1,4 @@
+development:
+  dialect: postgres
+  datasource: "postgres://postgres:postgres@db:5432/pomodoro-rpg?sslmode=disable"
+  dir: migrations
