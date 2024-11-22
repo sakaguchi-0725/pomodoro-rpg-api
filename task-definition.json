@@ -2,7 +2,7 @@
   "containerDefinitions": [
     {
       "name": "pomodoro-rpg-container",
-      "image": "{{ECR_IMAGE}}",
+      "image": "{{ ECR_IMAGE }}",
       "cpu": 0,
       "portMappings": [
         {
@@ -16,7 +16,7 @@
       "essential": true,
       "environment": [],
       "environmentFiles": [
-        "{{S3_ARN}}"
+        "{{ S3_ARN }}"
       ],
       "mountPoints": [],
       "volumesFrom": [],
@@ -24,11 +24,11 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "{{AWS_LOGS_GROUP}}",
+          "awslogs-group": "{{ AWS_LOGS_GROUP }}",
           "mode": "non-blocking",
           "awslogs-create-group": "true",
           "max-buffer-size": "25m",
-          "awslogs-region": "{{AWS_REGION}}",
+          "awslogs-region": "{{ AWS_REGION }}",
           "awslogs-stream-prefix": "ecs"
         },
         "secretOptions": []
@@ -37,8 +37,8 @@
     }
   ],
   "family": "pomodoro-rpg-task",
-  "taskRoleArn": "{{TASK_ROLE_ARN}}",
-  "executionRoleArn": "{{TASK_ROLE_ARN}}",
+  "taskRoleArn": "{{ TASK_ROLE_ARN }}",
+  "executionRoleArn": "{{ TASK_ROLE_ARN }}",
   "networkMode": "awsvpc",
   "volumes": [],
   "placementConstraints": [],

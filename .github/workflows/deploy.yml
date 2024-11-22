@@ -51,11 +51,14 @@ jobs:
           TASK_ROLE_ARN: ${{ secrets.TASK_ROLE_ARN }}
 
         run: |
-          sed -i "s|{{S3_ARN}}|${{ env.S3_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
-          sed -i "s|{{ECR_IMAGE}}|${{ env.ECR_IMAGE }}|g" ${{ env.ECS_TASK_DEFINITION }}
-          sed -i "s|{{AWS_LOGS_GROUP}}|${{ env.AWS_LOGS_GROUP }}|g" ${{ env.ECS_TASK_DEFINITION }}
-          sed -i "s|{{AWS_REGION}}|${{ env.AWS_REGION }}|g" ${{ env.ECS_TASK_DEFINITION }}
-          sed -i "s|{{TASK_ROLE_ARN}}|${{ env.TASK_ROLE_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ S3_ARN }}|${{ env.S3_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ ECR_IMAGE }}|${{ env.ECR_IMAGE }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ AWS_LOGS_GROUP }}|${{ env.AWS_LOGS_GROUP }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ AWS_REGION }}|${{ env.AWS_REGION }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ TASK_ROLE_ARN }}|${{ env.TASK_ROLE_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
+
+      - name: Debug task-definition.json
+        run: cat ${{ github.workspace }}/task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
