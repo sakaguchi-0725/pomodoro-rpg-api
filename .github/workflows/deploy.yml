@@ -9,7 +9,7 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  ECS_TASK_FAMILY: "pomodoro-rpg-task"
+  ECS_TASK_DEFINITION: ${{ github.workspace }}/task-definition.json
   CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
+      
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -43,37 +43,41 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # 最新のタスク定義を取得し、ベースとして使用
-      - name: Get latest task definition
-        id: get-latest-task-def
+      - name: Replace placeholders in task-definition.json
+        env:
+          ECR_IMAGE: ${{ secrets.ECR_IMAGE }}
+          S3_ARN: ${{ secrets.S3_ARN }}
+          AWS_LOGS_GROUP: ${{ secrets.AWS_LOGS_GROUP }}
+          TASK_ROLE_ARN: ${{ secrets.TASK_ROLE_ARN }}
+
         run: |
-          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_FAMILY }})
-          echo "$TASK_DEFINITION" > latest-task-def.json
+          sed -i "s|{{ S3_ARN }}|${{ env.S3_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ ECR_IMAGE }}|${{ env.ECR_IMAGE }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ AWS_LOGS_GROUP }}|${{ env.AWS_LOGS_GROUP }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ AWS_REGION }}|${{ env.AWS_REGION }}|g" ${{ env.ECS_TASK_DEFINITION }}
+          sed -i "s|{{ TASK_ROLE_ARN }}|${{ env.TASK_ROLE_ARN }}|g" ${{ env.ECS_TASK_DEFINITION }}
 
-      # タスク定義を更新
-      - name: Update task definition
-        id: update-task-def
-        run: |
-          UPDATED_TASK_DEF=$(cat latest-task-def.json | jq '.taskDefinition.containerDefinitions[0].image = "${{ steps.build-image.outputs.image }}" | .taskDefinition.containerDefinitions[0].name = "${{ env.CONTAINER_NAME }}"')
-          echo "$UPDATED_TASK_DEF" > updated-task-def.json
+      - name: Debug task-definition.json
+        run: cat ${{ github.workspace }}/task-definition.json
 
-      # 新しいタスク定義を登録
-      - name: Register new task definition
-        id: register-task-def
-        run: |
-          NEW_TASK_DEF=$(aws ecs register-task-definition --cli-input-json file://updated-task-def.json)
-          echo "$NEW_TASK_DEF" > new-task-def.json
-          echo "::set-output name=task-definition::$(echo $NEW_TASK_DEF | jq -r '.taskDefinition.taskDefinitionArn')"
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
 
-      # デバッグ: 新しいタスク定義を確認
-      - name: Debug new task definition
-        run: cat new-task-def.json
+      - name: Debug generated task-definition.json
+        run: cat ${{ steps.task-def.outputs.task-definition }}
 
-      # Amazon ECS にデプロイ
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        env:
+          ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+          ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
         with:
-          task-definition: ${{ steps.register-task-def.outputs.task-definition }}
-          service: ${{ secrets.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
