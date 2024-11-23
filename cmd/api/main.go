@@ -16,18 +16,22 @@ import (
 
 func main() {
 	conf := config.NewConfig()
-	db, err := db.NewDB(conf.DB)
+	gorm, err := db.NewDB(conf.DB)
 	if err != nil {
 		log.Fatalf("database initialize failed: %v", err)
 	}
 
+	if err := db.Migration(gorm, conf.DB); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
 	logger.Init()
 
-	accRepo := persistence.NewaccountPersistence(db)
+	accRepo := persistence.NewaccountPersistence(gorm)
 	accUsecase := usecase.NewAccountUsecase(accRepo)
 	accHandler := handler.NewAccountHandler(accUsecase)
 
-	tr := persistence.NewTimePersistence(db)
+	tr := persistence.NewTimePersistence(gorm)
 	tu := usecase.NewTimeUsecase(accRepo, tr)
 	th := handler.NewTimeHandler(tu)
 

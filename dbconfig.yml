@@ -2,8 +2,3 @@ development:
   dialect: postgres
   datasource: "postgres://postgres:postgres@db:5432/pomodoro-rpg?sslmode=disable"
   dir: migrations
-
-production:
-  dialect: postgres
-  datasource: "${RDS_DSN}"
-  dir: migrations
