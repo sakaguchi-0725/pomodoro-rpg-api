@@ -28,6 +28,14 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       
+      - name: Build migration Docker image
+        run: docker build -t my-app-migrate -f Dockerfile.migrate .
+  
+      - name: Run database migration
+        env:
+          RDS_DSN: ${{ secrets.RDS_DSN }}
+        run: docker run --rm -e RDS_DSN=$RDS_DSN my-app-migrate
+      
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
