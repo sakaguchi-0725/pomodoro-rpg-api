@@ -13,6 +13,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/migrations ./migrations
 
 RUN apk add --no-cache libc6-compat libpq
 
