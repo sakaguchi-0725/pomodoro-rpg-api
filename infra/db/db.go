@@ -32,7 +32,7 @@ func Migration(db *gorm.DB, cfg *config.DBConfig) error {
 	defer sqlDB.Close()
 
 	migrations := &migrate.FileMigrationSource{
-		Dir: "../../migrations",
+		Dir: "migrations",
 	}
 
 	n, err := migrate.Exec(sqlDB, "postgres", migrations, migrate.Up)
