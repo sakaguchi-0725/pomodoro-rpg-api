@@ -29,12 +29,12 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       
       - name: Build migration Docker image
-        run: docker build -t my-app-migrate -f Dockerfile.migrate .
+        run: docker build -t migrate -f Dockerfile.migrate .
   
       - name: Run database migration
         env:
           RDS_DSN: ${{ secrets.RDS_DSN }}
-        run: docker run --rm -e RDS_DSN=$RDS_DSN my-app-migrate
+        run: docker run --rm -e RDS_DSN=$RDS_DSN migrate
       
       - name: Login to Amazon ECR
         id: login-ecr

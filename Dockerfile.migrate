@@ -9,4 +9,4 @@ COPY . .
 
 RUN go install github.com/rubenv/sql-migrate/...@latest
 
-CMD ["sh", "-c", "sql-migrate up -config=sql-migrate-config.yml -env=production"]
+CMD ["sh", "-c", "sql-migrate up -config=dbconfig.yml -env=production"]
